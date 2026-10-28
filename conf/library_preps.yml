@@ -1,0 +1,21 @@
+nebnext_emseq:
+  adapters:
+    r1: AGATCGGAAGAGCACACGTCTGAACTCCAGTCA
+    r2: AGATCGGAAGAGCGTCGTGTAGGGAAAGAGTGT
+  trimming:
+    quality: 20
+    min_length: 30
+  alignment:
+    aligner: biscuit
+    directional: true
+
+custom:
+  adapters:
+    r1: null
+    r2: null
+  trimming:
+    quality: 20
+    min_length: 20
+  alignment:
+    aligner: biscuit
+    directional: false
