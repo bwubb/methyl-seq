@@ -18,13 +18,13 @@ process ALIGNMENT_QC {
 
     script:
     """
-    srun \
-        --ntasks=1 \
-        --cpus-per-task=${task.cpus} \
-        --mem-per-cpu=5632M \
-        --container-image=${params.samtools_container} \
-        --container-mounts=${projectDir}:${projectDir} \
-        --container-workdir=\$PWD \
+    srun \\
+        --ntasks=1 \\
+        --cpus-per-task=${task.cpus} \\
+        --mem-per-cpu=5632M \\
+        --container-image=${params.samtools_container} \\
+        --container-mounts=${projectDir}:${projectDir} \\
+        --container-workdir=\$PWD \\
         bash -c '
             set -euo pipefail
             samtools flagstat -@ ${task.cpus} ${bam} > ${sample}.flagstat.txt
@@ -32,30 +32,20 @@ process ALIGNMENT_QC {
             samtools idxstats ${bam} > ${sample}.idxstats.txt
         '
 
-    cat > bsconv_sum.awk << 'END'
-BEGIN { OFS="\t"; print "context","retention","conversion","pct_retention" }
-\$1 ~ /^[0-9.]+\$/ { for (i=1;i<=8;i++) a[i]+=\$i }
-END {
-    split("CpA,CpC,CpG,CpT", ctx, ",")
-    for (j=0;j<4;j++) {
-        r=a[j*2+1]; c=a[j*2+2]; t=r+c
-        p=(t>0)?100*r/t:0
-        printf "%s\t%.0f\t%.0f\t%.4f\n", ctx[j+1], r+0, c+0, p
-    }
-}
-END
-
-    srun \
-        --ntasks=1 \
-        --cpus-per-task=${task.cpus} \
-        --mem-per-cpu=5632M \
-        --container-image=${params.biscuit_container} \
-        --container-mounts=${projectDir}:${projectDir} \
-        --container-workdir=\$PWD \
+    srun \\
+        --ntasks=1 \\
+        --cpus-per-task=${task.cpus} \\
+        --mem-per-cpu=5632M \\
+        --container-image=${params.biscuit_container} \\
+        --container-mounts=${projectDir}:${projectDir} \\
+        --container-workdir=\$PWD \\
         bash -c '
             set -euo pipefail
             biscuit bsstrand ${fasta} ${bam} >/dev/null 2> ${sample}.bsstrand.txt
-            biscuit bsconv -p ${fasta} ${bam} | awk -f bsconv_sum.awk > ${sample}.bsconv.txt
+            {
+                printf "CpA_R\\tCpA_C\\tCpC_R\\tCpC_C\\tCpG_R\\tCpG_C\\tCpT_R\\tCpT_C\\n"
+                biscuit bsconv -p ${fasta} ${bam}
+            } > ${sample}.bsconv.txt
         '
     """
 }
